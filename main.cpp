@@ -8,6 +8,7 @@
 #include <igl/find_cross_field_singularities.h>
 #include <igl/per_face_normals.h>
 #include <eigen3/Eigen/Core>
+#include <igl/find_cross_field_singularities.h>
 
 
 
@@ -41,6 +42,10 @@ int main(int argc, char *argv[])
   Eigen::MatrixXd ff2_b;
 
   Eigen::MatrixXd N;
+  Eigen::VectorXi Singularities_id;
+  Eigen::VectorXi isSingularity;
+
+
 
 
   frame_field_deformer(V1,F1,ff1, ff2, V1_d, ff1_d, ff2_d,100,0.5);
@@ -49,31 +54,48 @@ int main(int argc, char *argv[])
 
   frame_to_cross_field(V1_d,F1,ff1_d,ff2_d, ff1_b); //ff1_b cross field vector, we need to rotate it 90`
 
-  get_perp_vector(ff1_b, N,ff2_b);
-  
- 
-  // igl::barycenter(V1,F1,bry);
-  igl::barycenter(V1_d,F1,bry);
+  get_perp_vector(ff1_b, N,ff2_b);//we get the perpendicular vector to create the cross field (assuming normals with 1 norm)
 
-  // double avg = avg_edge_length(V1,F1);
-  double avg = avg_edge_length(V1_d,F1);
+  find_cross_field_singularities(V1_d, F1, ff1_b, ff2_b, isSingularity, Singularities_id, false);
+
+ 
+  igl::barycenter(V1,F1,bry);
+  // igl::barycenter(V1_d,F1,bry);
+
+  double avg = avg_edge_length(V1,F1);
+  // double avg = avg_edge_length(V1_d,F1);
 
   // // Plot the mesh
   const RowVector3d red(0.8,0.2,0.2),blue(0.2,0.2,0.8);
   igl::opengl::glfw::Viewer viewer;
-  viewer.data().set_mesh(V1_d, F1);
-  // viewer.data().set_mesh(V1, F1);
+  // viewer.data().set_mesh(V1_d, F1);
+  viewer.data().set_mesh(V1, F1);
 
   viewer.data().set_face_based(true);
-  // //Cross field deform
-  viewer.data().add_edges(bry - ff1_b *avg /2, bry + ff1_b *avg/2, red);
-  viewer.data().add_edges(bry - ff2_b *avg /2, bry + ff2_b *avg/2, blue);
-
+  // // //Cross field deform
+  // viewer.data().add_edges(bry - ff1_b *avg /2, bry + ff1_b *avg/2, red);
+  // viewer.data().add_edges(bry - ff2_b *avg /2, bry + ff2_b *avg/2, blue);
 
   // viewer.data().add_edges(bry - ff1_d *avg /2, bry + ff1_d *avg/2, red);
   // viewer.data().add_edges(bry - ff2_d *avg /2, bry + ff2_d *avg/2, blue);
-  // viewer.data().add_edges(bry - ff1 *avg /2, bry + ff1 *avg/2, red);
-  // viewer.data().add_edges(bry - ff2 *avg /2, bry + ff2 *avg/2, blue);
+
+  viewer.data().add_edges(bry - ff1 *avg /2, bry + ff1 *avg/2, red);
+  viewer.data().add_edges(bry - ff2 *avg /2, bry + ff2 *avg/2, blue);
+
+  for(unsigned i=0; i< V1_d.rows();i++){
+    if (Singularities_id(i) < -0.001){
+      // viewer.data().add_points(V1_d.row(i),RowVector3d(0,0,1));
+      viewer.data().add_points(V1.row(i),RowVector3d(0,0,1));
+    }
+
+    else if (Singularities_id(i) > 0.001){
+      // viewer.data().add_points(V1_d.row(i),RowVector3d(1,0,0));
+      viewer.data().add_points(V1.row(i),RowVector3d(1,0,0));
+    }
+      
+
+  }
+
   viewer.launch();
 }
 
