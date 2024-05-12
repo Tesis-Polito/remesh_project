@@ -24,12 +24,21 @@ igl_include(glfw)
 #igl_include(restricted mosek)
 #igl_include(restricted triangle)
 
+
+
+# find_package(Eigen3 REQUIRED)
+
+# include_directories("/usr/include/")
+
+
 # Add your project files
-file(GLOB SRC_FILES *.cpp)
-add_executable(${PROJECT_NAME} ${SRC_FILES})
+file(GLOB SRC_FILES *.cpp *.hpp)
+add_executable(${PROJECT_NAME} ${SRC_FILES}) #include/mytesting.cpp include/mytesting.hpp
+
 
 # Link igl (and the glfw module) to your project
 target_link_libraries(${PROJECT_NAME} PUBLIC 
+  # ${Eigen_LIBRARIES}
   igl::glfw
   ## Other modules you could link to
   # igl::embree
